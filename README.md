@@ -33,6 +33,7 @@
 - `COOKIE_SECURE=true`
 - `APP_ORIGIN` 配置为线上域名
 - 写接口启用同源校验
+- `ADMIN_PASSWORD_HASH` 使用 bcrypt，并在 `.env.production` 中按 `\$2b\$12\$...` 形式写入（避免 dotenv 展开）
 
 ## 许可证
 - MIT（见 `LICENSE`）
