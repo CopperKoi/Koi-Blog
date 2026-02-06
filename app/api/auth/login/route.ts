@@ -1,5 +1,5 @@
 import { jsonResponse, errorResponse } from "@/lib/utils";
-import { issueToken, setSessionCookie, verifyPassword } from "@/lib/auth";
+import { issueToken, setSessionCookie, verifyPassword, verifyUsername } from "@/lib/auth";
 import { getClientIp, verifySameOriginForWrite } from "@/lib/security";
 
 export const dynamic = "force-dynamic";
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     markLoginFailure(rateKey);
     return errorResponse(401, "Invalid credentials");
   }
-  if (String(username) !== (process.env.ADMIN_USER || "")) {
+  if (!verifyUsername(String(username))) {
     markLoginFailure(rateKey);
     return errorResponse(401, "Invalid credentials");
   }
