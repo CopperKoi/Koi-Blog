@@ -1,0 +1,96 @@
+import crypto from "crypto";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
+
+const IS_PROD = process.env.NODE_ENV === "production";
+const DEFAULT_COOKIE_NAME = IS_PROD ? "__Host-blog_session" : "blog_session";
+const COOKIE_NAME = process.env.COOKIE_NAME || DEFAULT_COOKIE_NAME;
+const JWT_SECRET = process.env.JWT_SECRET || "unsafe-secret";
+const ADMIN_USER = process.env.ADMIN_USER || "";
+const ADMIN_SALT = process.env.ADMIN_SALT || "";
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
+const COOKIE_SECURE = IS_PROD ? true : process.env.COOKIE_SECURE !== "false";
+
+function assertProdSecurityConfig() {
+  if (!IS_PROD) return;
+  if (process.env.COOKIE_SECURE !== "true") {
+    throw new Error("Security misconfiguration: COOKIE_SECURE must be true in production");
+  }
+  if (JWT_SECRET === "unsafe-secret") {
+    throw new Error("Security misconfiguration: JWT_SECRET must be set in production");
+  }
+  if (!ADMIN_PASSWORD_HASH) {
+    throw new Error("Security misconfiguration: ADMIN_PASSWORD_HASH must be set in production");
+  }
+  if (!COOKIE_NAME.startsWith("__Host-")) {
+    throw new Error("Security misconfiguration: production session cookie must use __Host- prefix");
+  }
+}
+
+export function sha256Hex(input: string) {
+  return crypto.createHash("sha256").update(input).digest("hex");
+}
+
+export function verifyPassword(password: string) {
+  if (!ADMIN_PASSWORD_HASH) return false;
+  const hash = ADMIN_PASSWORD_HASH.replace("sha256:", "");
+  return sha256Hex(`${ADMIN_SALT}${password}`) === hash;
+}
+
+export function issueToken() {
+  assertProdSecurityConfig();
+  return jwt.sign({ sub: ADMIN_USER }, JWT_SECRET, {
+    expiresIn: "12h",
+    issuer: "copperkoi-blog",
+    audience: "copperkoi-admin"
+  });
+}
+
+export async function readToken() {
+  const cookieStore = await cookies();
+  return cookieStore.get(COOKIE_NAME)?.value;
+}
+
+export async function requireAdmin() {
+  assertProdSecurityConfig();
+  const token = await readToken();
+  if (!token) return null;
+  try {
+    const payload = jwt.verify(token, JWT_SECRET, {
+      issuer: "copperkoi-blog",
+      audience: "copperkoi-admin"
+    }) as { sub?: string };
+    if (payload.sub !== ADMIN_USER) return null;
+    return payload.sub;
+  } catch {
+    return null;
+  }
+}
+
+export async function setSessionCookie(token: string) {
+  assertProdSecurityConfig();
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: COOKIE_SECURE,
+    path: "/",
+    maxAge: 60 * 60 * 12
+  });
+}
+
+export async function clearSessionCookie() {
+  assertProdSecurityConfig();
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_NAME, "", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: COOKIE_SECURE,
+    path: "/",
+    expires: new Date(0)
+  });
+}
+
+export function getSessionCookieName() {
+  return COOKIE_NAME;
+}
