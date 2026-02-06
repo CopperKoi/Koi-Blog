@@ -2,6 +2,8 @@
 
 这是一个基于 Next.js（App Router）+ PostgreSQL + Nginx 的个人博客项目，包含前台浏览与后台内容管理能力。
 
+> 给我爆点⭐！
+
 ## 在线站点
 - 已部署地址：`https://copperkoi.cn`
 
