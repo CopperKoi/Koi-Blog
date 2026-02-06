@@ -7,8 +7,37 @@ const DEFAULT_COOKIE_NAME = IS_PROD ? "__Host-blog_session" : "blog_session";
 const COOKIE_NAME = process.env.COOKIE_NAME || DEFAULT_COOKIE_NAME;
 const JWT_SECRET = process.env.JWT_SECRET || "unsafe-secret";
 const ADMIN_USER = process.env.ADMIN_USER || "";
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
+const RAW_ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 const COOKIE_SECURE = IS_PROD ? true : process.env.COOKIE_SECURE !== "false";
+
+function unwrapEnvValue(value: string) {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+    (trimmed.startsWith('"') && trimmed.endsWith('"'))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+function normalizeAdminPasswordHash(raw: string) {
+  const unwrapped = unwrapEnvValue(raw);
+  if (!unwrapped) return "";
+
+  // Dotenv/systemd variants may preserve escaped dollars.
+  const unescaped = unwrapped.replace(/\\\$/g, "$");
+  if (unescaped.startsWith("$2")) return unescaped;
+
+  // If dotenv-expand swallowed "$2b$12$", rebuild from the 53-char body.
+  if (/^[./A-Za-z0-9]{53}$/.test(unescaped)) {
+    return `$2b$12$${unescaped}`;
+  }
+
+  return unescaped;
+}
+
+const ADMIN_PASSWORD_HASH = normalizeAdminPasswordHash(RAW_ADMIN_PASSWORD_HASH);
 
 function assertProdSecurityConfig() {
   if (!IS_PROD) return;
