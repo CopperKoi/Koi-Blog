@@ -6,7 +6,7 @@ const IS_PROD = process.env.NODE_ENV === "production";
 const DEFAULT_COOKIE_NAME = IS_PROD ? "__Host-blog_session" : "blog_session";
 const COOKIE_NAME = process.env.COOKIE_NAME || DEFAULT_COOKIE_NAME;
 const JWT_SECRET = process.env.JWT_SECRET || "unsafe-secret";
-const ADMIN_USER = process.env.ADMIN_USER || "";
+const RAW_ADMIN_USER = process.env.ADMIN_USER || process.env.ADMIN_USERNAME || "copperkoi";
 const RAW_ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "";
 const COOKIE_SECURE = IS_PROD ? true : process.env.COOKIE_SECURE !== "false";
 
@@ -37,6 +37,12 @@ function normalizeAdminPasswordHash(raw: string) {
   return unescaped;
 }
 
+function normalizeAdminUser(raw: string) {
+  const unwrapped = unwrapEnvValue(raw);
+  return unwrapped.trim();
+}
+
+const ADMIN_USER = normalizeAdminUser(RAW_ADMIN_USER) || "copperkoi";
 const ADMIN_PASSWORD_HASH = normalizeAdminPasswordHash(RAW_ADMIN_PASSWORD_HASH);
 
 function assertProdSecurityConfig() {
@@ -66,6 +72,10 @@ export function verifyPassword(password: string) {
   } catch {
     return false;
   }
+}
+
+export function verifyUsername(username: string) {
+  return username.trim() === ADMIN_USER;
 }
 
 export function issueToken() {
