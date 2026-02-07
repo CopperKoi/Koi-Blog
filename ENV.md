@@ -1,28 +1,28 @@
-# Environment Configuration (`.env`)
+# 环境变量配置（`.env`）
 
-This project uses `.env` for runtime configuration.
-Never commit real secrets to Git.
+项目运行依赖 `.env` 配置。
+请勿将真实密钥提交到 Git。
 
-## Production baseline
+## 生产环境基线
 
-The following values are mandatory in production:
+以下配置在生产环境必须满足：
 
 ```env
 NODE_ENV=production
 FORCE_HTTPS=true
 COOKIE_SECURE=true
 COOKIE_NAME=__Host-blog_session
-JWT_SECRET=<strong-random-secret>
-ADMIN_PASSWORD_HASH=<escaped-bcrypt-hash>
+JWT_SECRET=<高强度随机密钥>
+ADMIN_PASSWORD_HASH=<转义后的bcrypt-hash>
 APP_ORIGIN=https://copperkoi.cn
 ```
 
-## Production source-of-truth policy
+## 生产环境配置源策略
 
-For production, use one env file managed by systemd:
+生产环境建议只使用一个由 systemd 管理的环境文件：
 - `/etc/copperkoi-blog.env`
 
-Recommended service override:
+推荐的服务覆盖配置：
 
 ```ini
 [Service]
@@ -30,49 +30,49 @@ EnvironmentFile=
 EnvironmentFile=/etc/copperkoi-blog.env
 ```
 
-Important:
-- Do **not** keep auth/security keys in project-level `.env*` files on server.
-- Next.js may load `.env*` at runtime and override expected process env values.
+重要说明：
+- 服务器项目目录中不要保留鉴权/安全相关 `.env*`。
+- Next.js 运行时可能加载 `.env*`，从而覆盖进程期望环境变量。
 
-## Required variables
+## 必要变量
 
 ```env
-# Database
+# 数据库
 DATABASE_URL=postgres://user:password@127.0.0.1:5432/blog_db
 
-# Admin account
+# 管理员账号
 ADMIN_USER=copperkoi
-# Optional legacy alias still accepted: ADMIN_USERNAME
-ADMIN_PASSWORD_HASH=<escaped-bcrypt-hash>
+# 可选兼容旧变量名：ADMIN_USERNAME
+ADMIN_PASSWORD_HASH=<转义后的bcrypt-hash>
 
-# Auth/session
-JWT_SECRET=<strong-random-secret>
+# 鉴权 / 会话
+JWT_SECRET=<高强度随机密钥>
 COOKIE_NAME=__Host-blog_session
 COOKIE_SECURE=true
 
-# Enforce HTTPS in middleware
+# 中间件强制 HTTPS
 FORCE_HTTPS=true
 
-# Public origin for write request same-origin validation
+# 写请求同源校验使用的公网 origin
 APP_ORIGIN=https://copperkoi.cn
 
-# Public API base (optional, empty means same-origin /api)
+# 前端 API 基址（可选，留空表示同源 /api）
 NEXT_PUBLIC_API_BASE=
 
-# SSL update API write targets
+# SSL 更新接口使用的证书路径
 SSL_KEY_PATH=/path/to/copperkoi.cn.key
 SSL_CERT_PATH=/path/to/copperkoi.cn.pem
 ```
 
-## Generate bcrypt hash
+## 生成 bcrypt 哈希
 
 ```bash
 node -e "const b=require('bcryptjs');console.log(b.hashSync('ChangeMe!',12))"
 ```
 
-## Write `ADMIN_PASSWORD_HASH` safely
+## 安全写入 `ADMIN_PASSWORD_HASH`
 
-Use escaped dollars when writing `.env.production` to prevent dotenv expansion from stripping bcrypt prefix:
+写入 `.env.production` 时需要把 `$` 转义为 `\$`，避免 dotenv 展开把 bcrypt 前缀吃掉：
 
 ```bash
 RAW_HASH=$(node -e "const b=require('bcryptjs');process.stdout.write(b.hashSync('ChangeMe!',12));")
@@ -81,23 +81,23 @@ sed -i '/^ADMIN_USER=/d;/^ADMIN_PASSWORD_HASH=/d' .env.production
 printf 'ADMIN_USER=copperkoi\nADMIN_PASSWORD_HASH=%s\n' "$ESC_HASH" >> .env.production
 ```
 
-Expected stored form starts with `\$2b\$12\$...` in file.
+文件中期望值应以 `\$2b\$12\$...` 形式出现。
 
-## Validate loaded hash
+## 校验加载后的哈希
 
 ```bash
 node -e 'const {loadEnvConfig}=require("@next/env");loadEnvConfig(process.cwd(), false); const b=require("bcryptjs"); const h=process.env.ADMIN_PASSWORD_HASH||""; console.log("prefix",h.slice(0,4)); console.log("match",b.compareSync("ChangeMe!",h));'
 ```
 
-Expected:
-- `prefix` is `$2b$` (or `$2a$`/`$2y$`)
-- `match` is `true`
+期望：
+- `prefix` 为 `$2b$`（或 `$2a$`/`$2y$`）
+- `match` 为 `true`
 
-## Security notes
+## 安全说明
 
-- Keep `FORCE_HTTPS=true` and deploy behind TLS.
-- Keep `COOKIE_SECURE=true` in production.
-- Use a high-entropy `JWT_SECRET` (at least 32 bytes random).
-- Keep `APP_ORIGIN` equal to your public HTTPS domain.
-- Do not expose `.env` via static file server rules.
-- Do not run production with default/fallback secrets.
+- 生产环境保持 `FORCE_HTTPS=true` 并部署在 TLS 后。
+- 生产环境保持 `COOKIE_SECURE=true`。
+- `JWT_SECRET` 使用高熵随机值（至少 32 字节）。
+- `APP_ORIGIN` 必须与线上 HTTPS 域名一致。
+- 静态服务规则中禁止暴露 `.env` 文件。
+- 生产环境不要使用默认或兜底密钥。

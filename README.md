@@ -1,44 +1,41 @@
-# CopperKoi Blog
+# CopperKoi 博客
 
-A production-ready personal blog built with Next.js (App Router), PostgreSQL, and Nginx reverse proxy.
+这是一个基于 Next.js（App Router）+ PostgreSQL + Nginx 反向代理的可生产部署个人博客项目。
 
-## Highlights
-- Content publishing and management for a single admin account (`copperkoi`)
-- Markdown editing and rendering with code highlighting
-- Public pages: home, article list, search, about, friends
-- Admin pages: post management, about editing, SSL update entry
-- Secure session cookie policy for production (`__Host-...`, `HttpOnly`, `SameSite=Strict`)
-- HTTPS-first deployment design behind Nginx
+## 功能概览
+- 单管理员账号（`copperkoi`）发布与管理内容
+- 支持 Markdown 编辑与渲染，包含代码高亮
+- 公开页面：首页、文章总览、检索、关于、友链
+- 管理页面：文章管理、关于页编辑、SSL 更新入口
+- 生产环境会话安全策略（`__Host-...`、`HttpOnly`、`SameSite=Strict`）
+- 默认面向 HTTPS 部署（Nginx 终止 TLS）
 
-## Tech Stack
-- Frontend & backend runtime: Next.js 16 (App Router)
-- Language: TypeScript
-- Database: PostgreSQL
-- Process manager: systemd
-- Reverse proxy / TLS termination: Nginx
+## 技术栈
+- 前后端运行时：Next.js 16（App Router）
+- 语言：TypeScript
+- 数据库：PostgreSQL
+- 进程管理：systemd
+- 反向代理 / TLS：Nginx
 
-## Project Structure
-- `app/`: routes and API handlers
-- `components/`: reusable UI components
-- `lib/`: auth, security, DB utilities
-- `public/`: static assets
-- `ENV.md`: environment variable reference
-- `DEPLOYMENT_NOTES.md`: deployment troubleshooting notes
-- `MAINTENANCE_GUIDE.md`: long-term maintenance and upgrade playbook
+## 项目结构
+- `app/`：页面路由与 API 路由
+- `components/`：可复用 UI 组件
+- `lib/`：鉴权、安全、数据库工具
+- `public/`：静态资源
+- `ENV.md`：环境变量说明
+- `MAINTENANCE_GUIDE.md`：后续升级与运维维护手册
 
-## Security Baseline
-- `FORCE_HTTPS=true` in production
-- `COOKIE_SECURE=true` in production
-- `APP_ORIGIN` configured to public domain
-- Write APIs protected by same-origin checks in production
-- Sensitive config kept in `.env.production` only
+## 安全基线
+- 生产环境启用 `FORCE_HTTPS=true`
+- 生产环境启用 `COOKIE_SECURE=true`
+- 配置 `APP_ORIGIN` 为线上域名
+- 生产环境写接口启用同源校验
+- 敏感配置仅放在 `.env.production`
 
-## Documentation
-- English docs and Chinese translated docs are both provided.
-- Chinese files are named with `.zh-CN.md` suffix.
-- Deployment postmortem and no-git FTP workflow: `DEPLOYMENT_NOTES.md`
-- Long-term release/ops checklist: `MAINTENANCE_GUIDE.md`
-- Production env source-of-truth policy: `ENV.md`
+## 文档说明
+- 当前仓库文档统一为中文版本。
+- 长期升级与运维检查清单：`MAINTENANCE_GUIDE.md`
+- 生产环境变量配置与检查：`ENV.md`
 
-## License
-Private/internal use by repository owner unless otherwise stated.
+## 许可
+除非另有说明，本项目默认用于仓库所有者私有/内部使用。
