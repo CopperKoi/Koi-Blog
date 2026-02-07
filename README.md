@@ -23,8 +23,6 @@
 - `components/`：可复用 UI 组件
 - `lib/`：鉴权、安全、数据库工具
 - `public/`：静态资源
-- `ENV.md`：环境变量说明
-- `MAINTENANCE_GUIDE.md`：后续升级与运维维护手册
 
 ## 安全基线
 - 生产环境启用 `FORCE_HTTPS=true`
