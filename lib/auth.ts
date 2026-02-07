@@ -21,8 +21,12 @@ function unwrapEnvValue(value: string) {
   return trimmed;
 }
 
+function stripControlChars(value: string) {
+  return value.replace(/[\u0000-\u001F\u007F]/g, "");
+}
+
 function normalizeAdminPasswordHash(raw: string) {
-  const unwrapped = unwrapEnvValue(raw);
+  const unwrapped = stripControlChars(unwrapEnvValue(raw));
   if (!unwrapped) return "";
 
   // Dotenv/systemd variants may preserve escaped dollars.
@@ -38,8 +42,8 @@ function normalizeAdminPasswordHash(raw: string) {
 }
 
 function normalizeAdminUser(raw: string) {
-  const unwrapped = unwrapEnvValue(raw);
-  return unwrapped.trim();
+  const unwrapped = stripControlChars(unwrapEnvValue(raw));
+  return unwrapped.trim().toLowerCase();
 }
 
 const ADMIN_USER = normalizeAdminUser(RAW_ADMIN_USER) || "copperkoi";
@@ -75,7 +79,7 @@ export function verifyPassword(password: string) {
 }
 
 export function verifyUsername(username: string) {
-  return username.trim() === ADMIN_USER;
+  return username.trim().toLowerCase() === ADMIN_USER;
 }
 
 export function issueToken() {
