@@ -6,6 +6,16 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { FriendList, Friend } from "@/components/FriendList";
 import { apiFetch } from "@/lib/api";
 
+function reorderFriends(list: Friend[], fromId: string, toId: string) {
+  const fromIndex = list.findIndex((item) => item.id === fromId);
+  const toIndex = list.findIndex((item) => item.id === toId);
+  if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return list;
+  const next = [...list];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
 export default function FriendsPage() {
   const [items, setItems] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,6 +103,25 @@ export default function FriendsPage() {
     await reload();
   }
 
+  async function handleReorder(fromId: string, toId: string) {
+    const previous = items;
+    const next = reorderFriends(previous, fromId, toId);
+    if (next === previous) return;
+
+    setItems(next);
+    setHint("正在保存排序...");
+    try {
+      await apiFetch("/friends", {
+        method: "PATCH",
+        body: JSON.stringify({ orderIds: next.map((item) => item.id) })
+      });
+      setHint("已更新友链顺序。");
+    } catch {
+      setItems(previous);
+      setHint("排序保存失败，请重试。");
+    }
+  }
+
   return (
     <>
       <SiteHeader />
@@ -135,17 +164,21 @@ export default function FriendsPage() {
             <h2 style={{ margin: 0 }}>友链列表</h2>
             <span className="meta">{loading ? "加载中" : `共 ${items.length} 个站点`}</span>
           </div>
-          {loading ? (
-            <div className="notice">加载中...</div>
-          ) : (
-            <FriendList
-              items={items}
-              admin={admin}
-              onDelete={handleDelete}
-              onMove={handleMove}
-              onEdit={handleEdit}
-            />
-          )}
+          {admin && !loading && <p className="meta">可直接拖动 .card 调整友链顺序。</p>}
+          <div style={{ marginTop: "var(--space-4)" }}>
+            {loading ? (
+              <div className="notice">加载中...</div>
+            ) : (
+              <FriendList
+                items={items}
+                admin={admin}
+                onDelete={handleDelete}
+                onMove={handleMove}
+                onEdit={handleEdit}
+                onReorder={handleReorder}
+              />
+            )}
+          </div>
         </section>
       </main>
       <SiteFooter />

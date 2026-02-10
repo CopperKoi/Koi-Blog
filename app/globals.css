@@ -499,6 +499,27 @@ main {
   will-change: transform, opacity;
 }
 
+.friend-card-draggable {
+  cursor: grab;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+}
+
+.friend-card-draggable:active {
+  cursor: grabbing;
+}
+
+.friend-card-draggable.is-dragging {
+  opacity: 0.56;
+  transform: scale(0.99);
+}
+
+.friend-card-draggable.is-drop-target {
+  border-color: color-mix(in srgb, var(--brand) 48%, var(--border));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--brand) 24%, transparent),
+    var(--card-shadow);
+}
+
 .card h2,
 .card h3,
 .card h4 {

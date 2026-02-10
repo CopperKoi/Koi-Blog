@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, type ClipboardEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminGuard } from "@/components/AdminGuard";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -30,6 +30,21 @@ type EditorForm = {
 };
 
 const AUTOSAVE_KEY = "blog_autosave";
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("invalid data url"));
+    };
+    reader.onerror = () => reject(reader.error || new Error("read failed"));
+    reader.readAsDataURL(file);
+  });
+}
 
 function toLocalDatetime(iso?: string) {
   if (!iso) return "";
@@ -139,6 +154,48 @@ function EditorContent() {
   }, [autosaveEnabled, form, mode, isNew]);
 
   const previewContent = useMemo(() => form.content || "", [form.content]);
+
+  async function handleContentPaste(event: ClipboardEvent<HTMLTextAreaElement>) {
+    const imageFiles = Array.from(event.clipboardData.items)
+      .filter((item) => item.type.startsWith("image/"))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => Boolean(file));
+
+    if (!imageFiles.length) return;
+
+    event.preventDefault();
+    const textarea = event.currentTarget;
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? start;
+
+    try {
+      const urls = await Promise.all(imageFiles.map((file) => readFileAsDataUrl(file)));
+      const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
+      const markdown = urls
+        .map((url, index) => `![pasted-${stamp}${urls.length > 1 ? `-${index + 1}` : ""}](${url})`)
+        .join("\n\n");
+
+      setForm((prev) => {
+        const before = prev.content.slice(0, start);
+        const after = prev.content.slice(end);
+        const prefix = before && !before.endsWith("\n") ? "\n" : "";
+        const suffix = after && !after.startsWith("\n") ? "\n" : "";
+        const inserted = `${prefix}${markdown}${suffix}`;
+        const nextContent = `${before}${inserted}${after}`;
+        const cursor = before.length + inserted.length;
+
+        window.requestAnimationFrame(() => {
+          textarea.focus();
+          textarea.setSelectionRange(cursor, cursor);
+        });
+
+        return { ...prev, content: nextContent };
+      });
+      setActionHint("已插入粘贴图片。");
+    } catch {
+      setActionHint("图片粘贴失败，请重试。");
+    }
+  }
 
   function restoreAutosave() {
     if (!restoreDraft) return;
@@ -317,8 +374,10 @@ function EditorContent() {
                 <textarea
                   value={form.content}
                   onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
+                  onPaste={handleContentPaste}
                 />
               </label>
+              <p className="meta">支持直接粘贴剪贴板图片。</p>
             </div>
             <div className="preview-pane">
               <div className="meta">实时预览</div>

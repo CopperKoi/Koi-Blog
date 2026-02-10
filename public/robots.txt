@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# Easter egg: flag{c0pp3rk01}
