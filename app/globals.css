@@ -858,9 +858,12 @@ select:focus {
 
 .markdown pre {
   margin: 0;
+  max-width: 100%;
+  overflow: auto;
 }
 
 .markdown pre code {
+  min-width: max-content;
   display: block;
   padding: var(--space-3) var(--space-4) var(--space-4);
   font-family: var(--font-mono);
