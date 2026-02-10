@@ -49,6 +49,9 @@
   --code-number: #7a8da2;
   --code-title: #5a5d61;
   --code-built-in: #2f6d3c;
+  --inline-code-bg: color-mix(in srgb, var(--brand-soft) 36%, #ffffff);
+  --inline-code-border: color-mix(in srgb, var(--brand) 24%, #ffffff);
+  --inline-code-text: #2f3133;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -78,6 +81,9 @@
     --code-number: #7a8ea6;
     --code-title: #d2d6db;
     --code-built-in: #9fd1b0;
+    --inline-code-bg: color-mix(in srgb, var(--brand-soft) 42%, #0e1013);
+    --inline-code-border: color-mix(in srgb, var(--brand) 26%, #0e1013);
+    --inline-code-text: #eef0f2;
   }
 }
 
@@ -111,6 +117,9 @@
   --code-number: #7a8ea6;
   --code-title: #d2d6db;
   --code-built-in: #9fd1b0;
+  --inline-code-bg: color-mix(in srgb, var(--brand-soft) 42%, #0e1013);
+  --inline-code-border: color-mix(in srgb, var(--brand) 26%, #0e1013);
+  --inline-code-text: #eef0f2;
 }
 
 * {
@@ -866,6 +875,19 @@ select:focus {
 .markdown .code-header .dot.red { background: #ff5f56; }
 .markdown .code-header .dot.yellow { background: #ffbd2e; }
 .markdown .code-header .dot.green { background: #27c93f; }
+
+.markdown :not(pre) > code {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--inline-code-border);
+  background: var(--inline-code-bg);
+  color: var(--inline-code-text);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  line-height: 1.5;
+  vertical-align: baseline;
+}
 
 .markdown pre {
   margin: 0;
