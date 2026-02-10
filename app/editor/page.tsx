@@ -381,7 +381,7 @@ function EditorContent() {
             </div>
             <div className="preview-pane">
               <div className="meta">实时预览</div>
-              <div style={{ marginTop: "var(--space-3)" }}>
+              <div className="preview-scroll">
                 <MarkdownClient content={previewContent} />
               </div>
             </div>

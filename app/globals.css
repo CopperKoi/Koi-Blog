@@ -659,6 +659,17 @@ select:focus {
 
 .preview-pane {
   min-height: 320px;
+  max-height: min(72vh, 900px);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-scroll {
+  margin-top: var(--space-3);
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: var(--space-1);
 }
 
 .toolbar {
