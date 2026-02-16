@@ -540,6 +540,10 @@ main {
   gap: var(--space-3);
 }
 
+.card-body > * {
+  min-width: 0;
+}
+
 .card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -783,6 +787,42 @@ select:focus {
   text-decoration: none;
 }
 
+.markdown {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.markdown > * {
+  max-width: 100%;
+}
+
+.markdown img,
+.markdown video,
+.markdown iframe,
+.markdown svg,
+.markdown canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown .code-block {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.markdown pre {
+  width: 100%;
+}
+
+.markdown hr {
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: var(--space-5) 0;
+}
+
 .markdown h1,
 .markdown h2,
 .markdown h3 {
@@ -795,13 +835,20 @@ select:focus {
   border-left: 4px solid var(--brand);
   background: var(--page-bg-soft);
   color: var(--text-muted);
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-wrap: anywhere;
 }
 
 .markdown table {
-  width: 100%;
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin: var(--space-4) 0;
   font-size: var(--text-sm);
+  overflow-x: auto;
 }
 
 .markdown th,
