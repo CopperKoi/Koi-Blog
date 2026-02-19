@@ -656,11 +656,15 @@ select:focus {
   margin: var(--space-6) 0;
 }
 
-.post-layout {
+.post-page-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 220px;
   gap: var(--space-5);
   align-items: start;
+}
+
+.post-page-layout.no-toc {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .post-content {
@@ -1008,7 +1012,7 @@ select:focus {
 }
 
 .markdown .code-block pre {
-  max-height: calc(64 * 1.6 * var(--text-sm) + var(--space-3) + var(--space-4));
+  max-height: calc(44 * 1.6 * var(--text-sm) + var(--space-3) + var(--space-4));
   overflow: auto;
 }
 
@@ -1050,7 +1054,7 @@ select:focus {
 .markdown .hljs-params { color: var(--code-built-in); }
 
 @media (max-width: 900px) {
-  .post-layout {
+  .post-page-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 

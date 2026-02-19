@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const IS_PROD = process.env.NODE_ENV === "production";
-const ADMIN_PATH_PREFIXES = ["/studio", "/editor", "/ssl"];
+const ADMIN_PATH_PREFIXES = ["/studio-i10v32wn1220", "/editor-i10v32wn1220", "/ssl-i10v32wn1220"];
 const COOKIE_NAME = process.env.COOKIE_NAME || (IS_PROD ? "__Host-blog_session" : "blog_session");
 
 function stripFrameworkHeaders(response: NextResponse) {

@@ -33,50 +33,52 @@ export default function PostPage() {
     <>
       <SiteHeader />
       <main className="container">
-        <section className="card">
-          <div className="card-body">
-            {status && <div className="notice">{status}</div>}
-            {!status && post && (
-              <>
-                <div className="row space-between">
-                  <div>
-                    <h1 style={{ marginBottom: "var(--space-2)" }}>{post.title}</h1>
-                    <div className="meta">{formatDate(post.publishAt || post.createdAt)}</div>
+        <div className={`post-page-layout${!status && post ? "" : " no-toc"}`}>
+          <section className="card">
+            <div className="card-body">
+              {status && <div className="notice">{status}</div>}
+              {!status && post && (
+                <>
+                  <div className="row space-between">
+                    <div>
+                      <h1 style={{ marginBottom: "var(--space-2)" }}>{post.title}</h1>
+                      <div className="meta">{formatDate(post.publishAt || post.createdAt)}</div>
+                    </div>
+                    <div className="row">
+                      {(post.tags || []).map((tag: string) => (
+                        <span className="badge" key={tag}>{tag}</span>
+                      ))}
+                    </div>
                   </div>
-                  <div className="row">
-                    {(post.tags || []).map((tag: string) => (
-                      <span className="badge" key={tag}>{tag}</span>
-                    ))}
-                  </div>
-                </div>
-                <div className="divider" />
-                <div className="post-layout">
+                  <div className="divider" />
                   <article className="post-content">
                     <MarkdownClient content={post.content || ""} />
                   </article>
-                  <aside className="post-toc" aria-label="文章目录">
-                    <div className="post-toc-title">目录</div>
-                    {tocHeadings.length > 0 ? (
-                      <nav className="post-toc-nav">
-                        {tocHeadings.map((heading) => (
-                          <a
-                            key={heading.id}
-                            href={`#${heading.id}`}
-                            className={`post-toc-link level-${heading.level}`}
-                          >
-                            {heading.text}
-                          </a>
-                        ))}
-                      </nav>
-                    ) : (
-                      <div className="meta">暂无可导航标题</div>
-                    )}
-                  </aside>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
+                </>
+              )}
+            </div>
+          </section>
+          {!status && post && (
+            <aside className="post-toc" aria-label="文章目录">
+              <div className="post-toc-title">{post.title}</div>
+              {tocHeadings.length > 0 ? (
+                <nav className="post-toc-nav">
+                  {tocHeadings.map((heading) => (
+                    <a
+                      key={heading.id}
+                      href={`#${heading.id}`}
+                      className={`post-toc-link level-${heading.level}`}
+                    >
+                      {heading.text}
+                    </a>
+                  ))}
+                </nav>
+              ) : (
+                <div className="meta">暂无可导航标题</div>
+              )}
+            </aside>
+          )}
+        </div>
       </main>
       <SiteFooter />
     </>
