@@ -14,6 +14,7 @@
   --text-2xl: 28px;
   --text-3xl: 36px;
   --text-4xl: 46px;
+  --site-header-height: 72px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -131,6 +132,10 @@ body {
   height: 100%;
 }
 
+html {
+  scroll-padding-top: calc(var(--site-header-height) + var(--space-4));
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -139,6 +144,7 @@ body {
   font-family: var(--font-serif);
   display: flex;
   flex-direction: column;
+  padding-top: var(--site-header-height);
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -214,8 +220,10 @@ a:hover {
 }
 
 .site-header {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 50;
   background: color-mix(in srgb, var(--page-surface) 88%, transparent);
   backdrop-filter: blur(20px);
@@ -673,7 +681,7 @@ select:focus {
 
 .post-toc {
   position: sticky;
-  top: 88px;
+  top: calc(var(--site-header-height) + var(--space-4));
   align-self: start;
   border-left: 1px solid var(--border);
   padding-left: var(--space-3);
@@ -895,7 +903,7 @@ select:focus {
 .markdown h4[id],
 .markdown h5[id],
 .markdown h6[id] {
-  scroll-margin-top: 96px;
+  scroll-margin-top: calc(var(--site-header-height) + var(--space-4));
 }
 
 .markdown blockquote {

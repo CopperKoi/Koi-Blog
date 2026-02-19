@@ -1,16 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch, buildApiUrl } from "@/lib/api";
 
 const THEME_KEY = "blog_theme";
 
 export function SiteHeader() {
+  const headerRef = useRef<HTMLElement>(null);
   const [theme, setTheme] = useState("system");
   const [isAdmin, setIsAdmin] = useState(false);
   const [apiStatus, setApiStatus] = useState<"idle" | "ok" | "fail">("idle");
   const isDev = process.env.NODE_ENV === "development";
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const root = document.documentElement;
+    const syncHeight = () => {
+      root.style.setProperty("--site-header-height", `${header.offsetHeight}px`);
+    };
+    syncHeight();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(syncHeight) : null;
+    observer?.observe(header);
+    window.addEventListener("resize", syncHeight);
+    return () => {
+      window.removeEventListener("resize", syncHeight);
+      observer?.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(THEME_KEY) || "system";
@@ -68,7 +86,7 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="site-header">
+    <header ref={headerRef} className="site-header">
       <div className="container nav">
         <div className="nav-left">
           <Link className="logo" href="/">CopperKoi Blog</Link>
@@ -79,10 +97,10 @@ export function SiteHeader() {
             <Link href="/friends">Friends</Link>
             {isAdmin && (
               <>
-                <Link href="/studio">Manage</Link>
-                <Link href="/editor?new=1">New</Link>
-                <Link href="/editor?about=1">Update About</Link>
-                <Link href="/ssl">Update Certificate</Link>
+                <Link href="/studio-i10v32wn1220">Manage</Link>
+                <Link href="/editor-i10v32wn1220?new=1">New</Link>
+                <Link href="/editor-i10v32wn1220?about=1">Update About</Link>
+                <Link href="/ssl-i10v32wn1220">Update Certificate</Link>
                 <button
                   className="link-button"
                   type="button"

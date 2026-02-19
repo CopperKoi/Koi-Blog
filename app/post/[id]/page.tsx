@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useParams } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -11,6 +11,7 @@ import { formatDate, normalizePost } from "@/lib/posts";
 export default function PostPage() {
   const params = useParams();
   const id = params?.id as string;
+  const tocScrollFrameRef = useRef<number | null>(null);
   const [post, setPost] = useState<any>(null);
   const [status, setStatus] = useState("加载中...");
 
@@ -27,7 +28,55 @@ export default function PostPage() {
     })();
   }, [id]);
 
+  useEffect(() => {
+    return () => {
+      if (tocScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(tocScrollFrameRef.current);
+      }
+    };
+  }, []);
+
   const tocHeadings = useMemo(() => extractMarkdownHeadings(post?.content || ""), [post?.content]);
+
+  const onTocClick = (event: MouseEvent<HTMLAnchorElement>, headingId: string) => {
+    event.preventDefault();
+    const target = document.getElementById(headingId);
+    if (!target) return;
+
+    if (tocScrollFrameRef.current !== null) {
+      window.cancelAnimationFrame(tocScrollFrameRef.current);
+      tocScrollFrameRef.current = null;
+    }
+
+    const rootStyles = window.getComputedStyle(document.documentElement);
+    const headerHeight = Number.parseFloat(rootStyles.getPropertyValue("--site-header-height")) || 0;
+    const targetY = Math.max(
+      window.scrollY + target.getBoundingClientRect().top - headerHeight - 16,
+      0
+    );
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.scrollTo(0, targetY);
+    } else {
+      const startY = window.scrollY;
+      const distance = targetY - startY;
+      const duration = 220;
+      const start = performance.now();
+      const animate = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4);
+        window.scrollTo(0, startY + distance * eased);
+        if (progress < 1) {
+          tocScrollFrameRef.current = window.requestAnimationFrame(animate);
+        } else {
+          tocScrollFrameRef.current = null;
+        }
+      };
+      tocScrollFrameRef.current = window.requestAnimationFrame(animate);
+    }
+
+    window.history.replaceState(null, "", `#${headingId}`);
+  };
 
   return (
     <>
@@ -67,6 +116,7 @@ export default function PostPage() {
                     <a
                       key={heading.id}
                       href={`#${heading.id}`}
+                      onClick={(event) => onTocClick(event, heading.id)}
                       className={`post-toc-link level-${heading.level}`}
                     >
                       {heading.text}
