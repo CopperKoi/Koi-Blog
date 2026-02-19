@@ -38,7 +38,7 @@ function stripFrameworkHeaders(response: NextResponse) {
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (IS_PROD && process.env.FORCE_HTTPS !== "true") {
     return stripFrameworkHeaders(new NextResponse("Server misconfigured", { status: 500 }));
   }
