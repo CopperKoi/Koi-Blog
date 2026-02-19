@@ -29,7 +29,11 @@ export default function AboutPage() {
         <section className="card">
           <div className="card-body">
             {status && <div className="notice">{status}</div>}
-            {!status && <MarkdownClient content={content} />}
+            {!status && (
+              <article className="about-content">
+                <MarkdownClient content={content} />
+              </article>
+            )}
           </div>
         </section>
       </main>

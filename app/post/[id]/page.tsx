@@ -38,15 +38,44 @@ export default function PostPage() {
 
   const tocHeadings = useMemo(() => extractMarkdownHeadings(post?.content || ""), [post?.content]);
 
-  const onTocClick = (event: MouseEvent<HTMLAnchorElement>, headingId: string) => {
-    event.preventDefault();
-    const target = document.getElementById(headingId);
-    if (!target) return;
-
+  const scrollToY = (targetY: number) => {
     if (tocScrollFrameRef.current !== null) {
       window.cancelAnimationFrame(tocScrollFrameRef.current);
       tocScrollFrameRef.current = null;
     }
+
+    const clampedTarget = Math.max(targetY, 0);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      window.scrollTo(0, clampedTarget);
+      return;
+    }
+
+    const startY = window.scrollY;
+    const distance = clampedTarget - startY;
+    const duration = 220;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      window.scrollTo(0, startY + distance * eased);
+      if (progress < 1) {
+        tocScrollFrameRef.current = window.requestAnimationFrame(animate);
+      } else {
+        tocScrollFrameRef.current = null;
+      }
+    };
+    tocScrollFrameRef.current = window.requestAnimationFrame(animate);
+  };
+
+  const onTocTitleClick = () => {
+    scrollToY(0);
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  };
+
+  const onTocClick = (event: MouseEvent<HTMLAnchorElement>, headingId: string) => {
+    event.preventDefault();
+    const target = document.getElementById(headingId);
+    if (!target) return;
 
     const rootStyles = window.getComputedStyle(document.documentElement);
     const headerHeight = Number.parseFloat(rootStyles.getPropertyValue("--site-header-height")) || 0;
@@ -54,27 +83,7 @@ export default function PostPage() {
       window.scrollY + target.getBoundingClientRect().top - headerHeight - 16,
       0
     );
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      window.scrollTo(0, targetY);
-    } else {
-      const startY = window.scrollY;
-      const distance = targetY - startY;
-      const duration = 220;
-      const start = performance.now();
-      const animate = (now: number) => {
-        const progress = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 4);
-        window.scrollTo(0, startY + distance * eased);
-        if (progress < 1) {
-          tocScrollFrameRef.current = window.requestAnimationFrame(animate);
-        } else {
-          tocScrollFrameRef.current = null;
-        }
-      };
-      tocScrollFrameRef.current = window.requestAnimationFrame(animate);
-    }
-
+    scrollToY(targetY);
     window.history.replaceState(null, "", `#${headingId}`);
   };
 
@@ -109,7 +118,9 @@ export default function PostPage() {
           </section>
           {!status && post && (
             <aside className="post-toc" aria-label="文章目录">
-              <div className="post-toc-title">{post.title}</div>
+              <button type="button" className="post-toc-title-button" onClick={onTocTitleClick}>
+                {post.title}
+              </button>
               {tocHeadings.length > 0 ? (
                 <nav className="post-toc-nav">
                   {tocHeadings.map((heading) => (

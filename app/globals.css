@@ -687,12 +687,29 @@ select:focus {
   padding-left: var(--space-3);
 }
 
-.post-toc-title {
+.post-toc-title-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
   font-family: var(--font-sans);
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--text-muted);
   margin-bottom: var(--space-2);
+}
+
+.post-toc-title-button:hover {
+  color: var(--text-primary);
+}
+
+.post-toc-title-button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: var(--radius-1);
 }
 
 .post-toc-nav {
@@ -859,6 +876,26 @@ select:focus {
   min-width: 0;
   max-width: 100%;
   overflow-x: auto;
+}
+
+.post-content .markdown,
+.about-content .markdown {
+  font-family: var(--font-sans);
+}
+
+.post-content .markdown h1,
+.post-content .markdown h2,
+.post-content .markdown h3,
+.post-content .markdown h4,
+.post-content .markdown h5,
+.post-content .markdown h6,
+.about-content .markdown h1,
+.about-content .markdown h2,
+.about-content .markdown h3,
+.about-content .markdown h4,
+.about-content .markdown h5,
+.about-content .markdown h6 {
+  font-family: var(--font-serif);
 }
 
 .markdown > * {
