@@ -16,6 +16,7 @@
     "highlight.js": "latest",
     "jsdom": "latest",
     "jsonwebtoken": "latest",
+    "katex": "^0.16.28",
     "marked": "latest",
     "next": "^16.1.6",
     "pg": "latest",

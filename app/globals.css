@@ -920,6 +920,25 @@ select:focus {
   width: 100%;
 }
 
+.markdown .math-inline {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.markdown .math-block {
+  margin: var(--space-4) 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.markdown .math-block .katex-display {
+  margin: 0;
+}
+
 .markdown hr {
   width: 100%;
   max-width: 100%;

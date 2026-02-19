@@ -2,16 +2,80 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import DOMPurify from "dompurify";
-import { marked } from "marked";
+import katex from "katex";
+import { Marked, Renderer } from "marked";
 import hljs from "highlight.js/lib/common";
-
-marked.setOptions({ gfm: true, breaks: true });
 
 export type MarkdownHeading = {
   id: string;
   level: number;
   text: string;
 };
+
+type MathToken = {
+  type: "inlineMath" | "blockMath";
+  raw: string;
+  text: string;
+};
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeLatexText(value: string) {
+  return value
+    .replace(/\\/g, "\\textbackslash{}")
+    .replace(/([{}$&#_%])/g, "\\$1")
+    .replace(/\^/g, "\\textasciicircum{}")
+    .replace(/~/g, "\\textasciitilde{}");
+}
+
+function transformMathSource(value: string) {
+  return value.replace(/`([^`\n]+)`/g, (_match, code: string) => {
+    return `\\texttt{${escapeLatexText(code)}}`;
+  });
+}
+
+function renderMath(value: string, displayMode: boolean) {
+  const source = transformMathSource(value.trim());
+  const className = displayMode ? "math-block" : "math-inline";
+  try {
+    const html = katex.renderToString(source, {
+      displayMode,
+      throwOnError: false,
+      strict: "ignore",
+      output: "html"
+    });
+    return displayMode
+      ? `<div class="${className}">${html}</div>`
+      : `<span class="${className}">${html}</span>`;
+  } catch {
+    const escaped = escapeHtml(source);
+    return displayMode
+      ? `<div class="${className}">$$${escaped}$$</div>`
+      : `<span class="${className}">$${escaped}$</span>`;
+  }
+}
+
+function findMathEnd(src: string, start: number, delimiter: "$" | "$$") {
+  for (let i = start; i < src.length; i += 1) {
+    if (src[i] === "\\") {
+      i += 1;
+      continue;
+    }
+    if (delimiter === "$$") {
+      if (src[i] === "$" && src[i + 1] === "$") return i;
+    } else if (src[i] === "$") {
+      return i;
+    }
+  }
+  return -1;
+}
 
 function normalizeHeadingText(value: string) {
   return value
@@ -44,7 +108,7 @@ function createHeadingIdResolver() {
 }
 
 function createMarkdownRenderer(resolveHeadingId: (value: string) => string) {
-  const renderer = new marked.Renderer();
+  const renderer = new Renderer();
 
   renderer.code = ({ text, lang }) => {
     const safeLanguage =
@@ -81,15 +145,71 @@ function createMarkdownRenderer(resolveHeadingId: (value: string) => string) {
     const depth = token.depth;
     const text = token.text || "";
     const id = resolveHeadingId(text);
-    const inlineHtml = marked.parseInline(text, { renderer, async: false }) as string;
+    const inlineHtml = markdown.parseInline(text, { renderer, async: false }) as string;
     return `<h${depth} id="${id}">${inlineHtml}</h${depth}>`;
   };
 
   return renderer;
 }
 
+const markdown = new Marked({
+  gfm: true,
+  breaks: true
+});
+
+markdown.use({
+  extensions: [
+    {
+      name: "blockMath",
+      level: "block",
+      start(src: string) {
+        return src.indexOf("$$");
+      },
+      tokenizer(src: string): MathToken | undefined {
+        if (!src.startsWith("$$")) return undefined;
+        const end = findMathEnd(src, 2, "$$");
+        if (end < 0) return undefined;
+        const text = src.slice(2, end);
+        if (!text.trim()) return undefined;
+        const rawEnd = end + 2;
+        const lineBreak = src.startsWith("\r\n", rawEnd) ? "\r\n" : src[rawEnd] === "\n" ? "\n" : "";
+        return {
+          type: "blockMath",
+          raw: src.slice(0, rawEnd) + lineBreak,
+          text
+        };
+      },
+      renderer(token: unknown) {
+        return renderMath((token as MathToken).text, true);
+      }
+    },
+    {
+      name: "inlineMath",
+      level: "inline",
+      start(src: string) {
+        return src.indexOf("$");
+      },
+      tokenizer(src: string): MathToken | undefined {
+        if (!src.startsWith("$") || src.startsWith("$$")) return undefined;
+        const end = findMathEnd(src, 1, "$");
+        if (end < 0) return undefined;
+        const text = src.slice(1, end);
+        if (!text.trim() || /\n/.test(text) || /^\s|\s$/.test(text)) return undefined;
+        return {
+          type: "inlineMath",
+          raw: src.slice(0, end + 1),
+          text
+        };
+      },
+      renderer(token: unknown) {
+        return renderMath((token as MathToken).text, false);
+      }
+    }
+  ]
+});
+
 export function extractMarkdownHeadings(content: string): MarkdownHeading[] {
-  const tokens = marked.lexer(content || "", { gfm: true, breaks: true });
+  const tokens = markdown.lexer(content || "");
   const resolveHeadingId = createHeadingIdResolver();
   const headings: MarkdownHeading[] = [];
 
@@ -114,7 +234,7 @@ export function MarkdownClient({ content }: { content: string }) {
   const html = useMemo(() => {
     const resolveHeadingId = createHeadingIdResolver();
     const renderer = createMarkdownRenderer(resolveHeadingId);
-    const raw = marked.parse(content || "", { renderer, async: false }) as string;
+    const raw = markdown.parse(content || "", { renderer, async: false }) as string;
 
     DOMPurify.addHook("afterSanitizeAttributes", (node) => {
       if (node.tagName === "A" && node.getAttribute("target") === "_blank") {
