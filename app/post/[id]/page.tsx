@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
-import { MarkdownClient } from "@/components/MarkdownClient";
+import { MarkdownClient, extractMarkdownHeadings } from "@/components/MarkdownClient";
 import { apiFetch } from "@/lib/api";
 import { formatDate, normalizePost } from "@/lib/posts";
 
@@ -27,6 +27,8 @@ export default function PostPage() {
     })();
   }, [id]);
 
+  const tocHeadings = useMemo(() => extractMarkdownHeadings(post?.content || ""), [post?.content]);
+
   return (
     <>
       <SiteHeader />
@@ -48,7 +50,29 @@ export default function PostPage() {
                   </div>
                 </div>
                 <div className="divider" />
-                <MarkdownClient content={post.content || ""} />
+                <div className="post-layout">
+                  <article className="post-content">
+                    <MarkdownClient content={post.content || ""} />
+                  </article>
+                  <aside className="post-toc" aria-label="文章目录">
+                    <div className="post-toc-title">目录</div>
+                    {tocHeadings.length > 0 ? (
+                      <nav className="post-toc-nav">
+                        {tocHeadings.map((heading) => (
+                          <a
+                            key={heading.id}
+                            href={`#${heading.id}`}
+                            className={`post-toc-link level-${heading.level}`}
+                          >
+                            {heading.text}
+                          </a>
+                        ))}
+                      </nav>
+                    ) : (
+                      <div className="meta">暂无可导航标题</div>
+                    )}
+                  </aside>
+                </div>
               </>
             )}
           </div>

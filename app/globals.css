@@ -656,6 +656,62 @@ select:focus {
   margin: var(--space-6) 0;
 }
 
+.post-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.post-content {
+  min-width: 0;
+}
+
+.post-toc {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+  border-left: 1px solid var(--border);
+  padding-left: var(--space-3);
+}
+
+.post-toc-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.post-toc-nav {
+  display: grid;
+  gap: 6px;
+  max-height: calc(100vh - 160px);
+  overflow: auto;
+  padding-right: var(--space-1);
+}
+
+.post-toc-link {
+  display: block;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.post-toc-link:hover {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.post-toc-link.level-2 { padding-left: 8px; }
+.post-toc-link.level-3 { padding-left: 16px; }
+.post-toc-link.level-4 { padding-left: 24px; }
+.post-toc-link.level-5 { padding-left: 32px; }
+.post-toc-link.level-6 { padding-left: 40px; }
+
 .editor-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -829,6 +885,15 @@ select:focus {
   margin-top: 16px;
 }
 
+.markdown h1[id],
+.markdown h2[id],
+.markdown h3[id],
+.markdown h4[id],
+.markdown h5[id],
+.markdown h6[id] {
+  scroll-margin-top: 96px;
+}
+
 .markdown blockquote {
   margin: var(--space-4) 0;
   padding: var(--space-3) var(--space-4);
@@ -942,6 +1007,11 @@ select:focus {
   overflow: auto;
 }
 
+.markdown .code-block pre {
+  max-height: calc(64 * 1.6 * var(--text-sm) + var(--space-3) + var(--space-4));
+  overflow: auto;
+}
+
 .markdown pre code {
   min-width: max-content;
   display: block;
@@ -980,6 +1050,22 @@ select:focus {
 .markdown .hljs-params { color: var(--code-built-in); }
 
 @media (max-width: 900px) {
+  .post-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .post-toc {
+    position: static;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: var(--space-3);
+  }
+
+  .post-toc-nav {
+    max-height: none;
+  }
+
   .nav {
     flex-direction: column;
     align-items: flex-start;
