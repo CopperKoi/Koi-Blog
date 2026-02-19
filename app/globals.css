@@ -1069,6 +1069,19 @@ select:focus {
   vertical-align: baseline;
 }
 
+.markdown .katex .texttt {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--inline-code-border);
+  background: var(--inline-code-bg);
+  color: var(--inline-code-text);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  line-height: 1.5;
+  vertical-align: baseline;
+}
+
 .markdown pre {
   margin: 0;
   max-width: 100%;
