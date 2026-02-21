@@ -26,7 +26,7 @@ function stripFrameworkHeaders(response: NextResponse) {
         "script-src 'self' 'unsafe-inline'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com data:",
-        "img-src 'self' data: https://www.google.com",
+        "img-src 'self' data: https://www.google.com https://*.ibb.co",
         "connect-src 'self' https:",
         "object-src 'none'",
         "base-uri 'self'",
