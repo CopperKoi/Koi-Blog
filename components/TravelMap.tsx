@@ -70,6 +70,7 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
   const cityNameMapRef = useRef<Record<string, string>>({});
   const previousVisitedRef = useRef<Set<string>>(new Set());
   const hasSyncedVisitedRef = useRef(false);
+  const initialRevealDoneRef = useRef(false);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -187,11 +188,12 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
 
     const palette = readPalette(isDark);
     const cityNameMap = cityNameMapRef.current;
-    const data = Object.entries(cityNameMap).map(([code, displayName]) => ({
-      name: code,
-      displayName,
-      value: visitedSet.has(code) ? 1 : 0
-    }));
+    const buildData = (activeSet: Set<string>) =>
+      Object.entries(cityNameMap).map(([code, displayName]) => ({
+        name: code,
+        displayName,
+        value: activeSet.has(code) ? 1 : 0
+      }));
 
     const option: EChartsOption = {
       backgroundColor: palette.mapBackground,
@@ -247,7 +249,7 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
               areaColor: palette.cityHover
             }
           },
-          data
+          data: buildData(visitedSet)
         }
       ]
     };
@@ -255,9 +257,33 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
     chart.setOption(option, false);
 
     if (!hasSyncedVisitedRef.current) {
+      if (visitedSet.size > 0) {
+        const target = Array.from(visitedSet);
+        const revealSet = new Set<string>();
+        chart.setOption({
+          series: [{ id: "travel-map", data: buildData(revealSet) }]
+        }, false);
+
+        const batchSize = 14;
+        const frameGap = 36;
+        for (let index = 0; index < target.length; index += batchSize) {
+          const timer = window.setTimeout(() => {
+            target.slice(index, index + batchSize).forEach((code) => revealSet.add(code));
+            chart.setOption({
+              series: [{ id: "travel-map", data: buildData(revealSet) }]
+            }, false);
+          }, Math.floor(index / batchSize) * frameGap);
+          timers.push(timer);
+        }
+        initialRevealDoneRef.current = true;
+      }
       previousVisitedRef.current = new Set(visitedSet);
       hasSyncedVisitedRef.current = true;
-      return;
+      return () => {
+        for (const timer of timers) {
+          window.clearTimeout(timer);
+        }
+      };
     }
 
     const previous = previousVisitedRef.current;
@@ -267,6 +293,34 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
     }
     for (const code of previous) {
       if (!visitedSet.has(code)) changed.push(code);
+    }
+
+    if (!initialRevealDoneRef.current && previous.size === 0 && visitedSet.size > 0) {
+      const target = Array.from(visitedSet);
+      const revealSet = new Set<string>();
+      chart.setOption({
+        series: [{ id: "travel-map", data: buildData(revealSet) }]
+      }, false);
+
+      const batchSize = 14;
+      const frameGap = 36;
+      for (let index = 0; index < target.length; index += batchSize) {
+        const timer = window.setTimeout(() => {
+          target.slice(index, index + batchSize).forEach((code) => revealSet.add(code));
+          chart.setOption({
+            series: [{ id: "travel-map", data: buildData(revealSet) }]
+          }, false);
+        }, Math.floor(index / batchSize) * frameGap);
+        timers.push(timer);
+      }
+
+      initialRevealDoneRef.current = true;
+      previousVisitedRef.current = new Set(visitedSet);
+      return () => {
+        for (const timer of timers) {
+          window.clearTimeout(timer);
+        }
+      };
     }
 
     changed.slice(0, 12).forEach((code, index) => {
