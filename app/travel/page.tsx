@@ -81,7 +81,7 @@ export default function TravelPage() {
         <section className="row space-between">
           <div>
             <h1 style={{ marginBottom: "var(--space-2)" }}>Travel</h1>
-            <p className="meta">仅统计 2025 年之后的旅程</p>
+            <p className="meta">仅统计 2025 年之后的旅程，这是我和我的朋友们的回忆。</p>
           </div>
           {admin ? (
             <div className="row">
