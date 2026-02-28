@@ -28,11 +28,21 @@ function escapeHtml(value: string) {
 }
 
 function escapeLatexText(value: string) {
-  return value
-    .replace(/\\/g, "\\textbackslash{}")
-    .replace(/([{}$&#_%])/g, "\\$1")
-    .replace(/\^/g, "\\textasciicircum{}")
-    .replace(/~/g, "\\textasciitilde{}");
+  let out = "";
+  for (const ch of value) {
+    if (ch === "\\") out += "\\textbackslash{}";
+    else if (ch === "{") out += "\\{";
+    else if (ch === "}") out += "\\}";
+    else if (ch === "$") out += "\\$";
+    else if (ch === "&") out += "\\&";
+    else if (ch === "#") out += "\\#";
+    else if (ch === "_") out += "\\_";
+    else if (ch === "%") out += "\\%";
+    else if (ch === "^") out += "\\textasciicircum{}";
+    else if (ch === "~") out += "\\textasciitilde{}";
+    else out += ch;
+  }
+  return out;
 }
 
 function transformMathSource(value: string) {
@@ -79,7 +89,7 @@ function findMathEnd(src: string, start: number, delimiter: "$" | "$$") {
 
 function normalizeHeadingText(value: string) {
   return value
-    .replace(/<[^>]*>/g, "")
+    .replace(/[<>]/g, " ")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/[`*_~]/g, "")
