@@ -95,6 +95,7 @@ export function SiteHeader() {
             <Link href="/search">Search</Link>
             <Link href="/about">About</Link>
             <Link href="/friends">Friends</Link>
+            <Link href="/travel">Travel</Link>
             {isAdmin && (
               <>
                 <Link href="/studio-i10v32wn1220">Manage</Link>

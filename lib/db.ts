@@ -59,4 +59,12 @@ export async function initDb() {
   await pool.query(
     "CREATE INDEX IF NOT EXISTS friend_links_order_idx ON friend_links (sort_order DESC, created_at DESC)"
   );
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS travel_marks (
+      adcode INT PRIMARY KEY,
+      name TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
 }

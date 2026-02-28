@@ -13,6 +13,7 @@
     "bcryptjs": "latest",
     "cookie": "latest",
     "dompurify": "latest",
+    "echarts": "^6.0.0",
     "highlight.js": "latest",
     "jsdom": "latest",
     "jsonwebtoken": "latest",
