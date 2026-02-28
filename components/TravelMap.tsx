@@ -68,6 +68,8 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<ECharts | null>(null);
   const cityNameMapRef = useRef<Record<string, string>>({});
+  const previousVisitedRef = useRef<Set<string>>(new Set());
+  const hasSyncedVisitedRef = useRef(false);
 
   const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
@@ -181,20 +183,26 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
     if (!ready) return;
     const chart = chartRef.current;
     if (!chart) return;
+    const timers: number[] = [];
 
     const palette = readPalette(isDark);
     const cityNameMap = cityNameMapRef.current;
     const data = Object.entries(cityNameMap).map(([code, displayName]) => ({
       name: code,
       displayName,
-      value: visitedSet.has(code) ? 1 : 0,
-      itemStyle: {
-        areaColor: visitedSet.has(code) ? palette.cityVisited : palette.cityDefault
-      }
+      value: visitedSet.has(code) ? 1 : 0
     }));
 
     const option: EChartsOption = {
       backgroundColor: palette.mapBackground,
+      visualMap: {
+        show: false,
+        min: 0,
+        max: 1,
+        inRange: {
+          color: [palette.cityDefault, palette.cityVisited]
+        }
+      },
       tooltip: {
         trigger: "item",
         formatter: (params: unknown) => {
@@ -209,9 +217,14 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
       },
       series: [
         {
+          id: "travel-map",
           name: "travel",
           type: "map",
           map: MAP_NAME,
+          animation: true,
+          animationDuration: 420,
+          animationDurationUpdate: 360,
+          animationEasingUpdate: "cubicOut",
           roam: true,
           selectedMode: false,
           zoom: 1,
@@ -239,7 +252,41 @@ export function TravelMap({ marks, editable = false, onToggle, onCityCountChange
       ]
     };
 
-    chart.setOption(option, true);
+    chart.setOption(option, false);
+
+    if (!hasSyncedVisitedRef.current) {
+      previousVisitedRef.current = new Set(visitedSet);
+      hasSyncedVisitedRef.current = true;
+      return;
+    }
+
+    const previous = previousVisitedRef.current;
+    const changed: string[] = [];
+    for (const code of visitedSet) {
+      if (!previous.has(code)) changed.push(code);
+    }
+    for (const code of previous) {
+      if (!visitedSet.has(code)) changed.push(code);
+    }
+
+    changed.slice(0, 12).forEach((code, index) => {
+      const highlightTimer = window.setTimeout(() => {
+        chart.dispatchAction({ type: "highlight", seriesId: "travel-map", name: code });
+        const downplayTimer = window.setTimeout(() => {
+          chart.dispatchAction({ type: "downplay", seriesId: "travel-map", name: code });
+        }, 280);
+        timers.push(downplayTimer);
+      }, index * 60);
+      timers.push(highlightTimer);
+    });
+
+    previousVisitedRef.current = new Set(visitedSet);
+
+    return () => {
+      for (const timer of timers) {
+        window.clearTimeout(timer);
+      }
+    };
   }, [isDark, ready, visitedSet]);
 
   return (
