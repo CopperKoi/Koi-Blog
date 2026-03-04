@@ -258,18 +258,23 @@ export function MarkdownClient({ content }: { content: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const previewImgRef = useRef<HTMLImageElement>(null);
   const previewZoomFrameRef = useRef<number | null>(null);
+  const previewOffsetRef = useRef({ x: 0, y: 0 });
+  const previewDragStartRef = useRef<{ pointerX: number; pointerY: number; originX: number; originY: number } | null>(null);
+  const previewDraggedRef = useRef(false);
   const previewScaleRef = useRef(1);
   const previewTargetScaleRef = useRef(1);
   const [canPortal, setCanPortal] = useState(false);
+  const [isPreviewDragging, setIsPreviewDragging] = useState(false);
   const [preview, setPreview] = useState<{
     src: string;
     alt: string;
   } | null>(null);
 
-  const applyPreviewScale = useCallback((scale: number) => {
+  const applyPreviewTransform = useCallback((scale: number) => {
     const image = previewImgRef.current;
     if (!image) return;
-    image.style.transform = `translateZ(0) scale(${scale})`;
+    const { x, y } = previewOffsetRef.current;
+    image.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
   }, []);
 
   const stopPreviewZoomAnimation = useCallback(() => {
@@ -286,19 +291,23 @@ export function MarkdownClient({ content }: { content: string }) {
       const next = current + (target - current) * 0.24;
       if (Math.abs(target - next) < 0.0015) {
         previewScaleRef.current = target;
-        applyPreviewScale(target);
+        applyPreviewTransform(target);
         previewZoomFrameRef.current = null;
         return;
       }
       previewScaleRef.current = next;
-      applyPreviewScale(next);
+      applyPreviewTransform(next);
       previewZoomFrameRef.current = window.requestAnimationFrame(tick);
     };
     previewZoomFrameRef.current = window.requestAnimationFrame(tick);
-  }, [applyPreviewScale]);
+  }, [applyPreviewTransform]);
 
   const closePreview = useCallback(() => {
     stopPreviewZoomAnimation();
+    previewDragStartRef.current = null;
+    previewDraggedRef.current = false;
+    previewOffsetRef.current = { x: 0, y: 0 };
+    setIsPreviewDragging(false);
     setPreview(null);
   }, [stopPreviewZoomAnimation]);
   const html = useMemo(() => {
@@ -382,9 +391,10 @@ export function MarkdownClient({ content }: { content: string }) {
     if (!preview) return;
     previewScaleRef.current = 1;
     previewTargetScaleRef.current = 1;
-    applyPreviewScale(1);
+    previewOffsetRef.current = { x: 0, y: 0 };
+    applyPreviewTransform(1);
     return () => stopPreviewZoomAnimation();
-  }, [preview, applyPreviewScale, stopPreviewZoomAnimation]);
+  }, [preview, applyPreviewTransform, stopPreviewZoomAnimation]);
 
   useEffect(() => {
     if (!preview) return;
@@ -407,8 +417,61 @@ export function MarkdownClient({ content }: { content: string }) {
       Math.max(0.6, Number((previewTargetScaleRef.current * factor).toFixed(4)))
     );
     previewTargetScaleRef.current = nextTarget;
+    if (nextTarget <= 1.02) {
+      previewOffsetRef.current = { x: 0, y: 0 };
+      previewDragStartRef.current = null;
+      setIsPreviewDragging(false);
+    }
     startPreviewZoomAnimation();
   }, [preview, startPreviewZoomAnimation]);
+
+  const onPreviewPointerDown = useCallback((event: React.PointerEvent<HTMLImageElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    previewDraggedRef.current = false;
+    previewDragStartRef.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      originX: previewOffsetRef.current.x,
+      originY: previewOffsetRef.current.y
+    };
+    setIsPreviewDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
+
+  const onPreviewPointerMove = useCallback((event: React.PointerEvent<HTMLImageElement>) => {
+    const start = previewDragStartRef.current;
+    if (!start) return;
+    event.preventDefault();
+    const deltaX = event.clientX - start.pointerX;
+    const deltaY = event.clientY - start.pointerY;
+    if (!previewDraggedRef.current && Math.hypot(deltaX, deltaY) > 3) {
+      previewDraggedRef.current = true;
+    }
+    previewOffsetRef.current = {
+      x: start.originX + deltaX,
+      y: start.originY + deltaY
+    };
+    applyPreviewTransform(previewScaleRef.current);
+  }, [applyPreviewTransform]);
+
+  const endPreviewDrag = useCallback((event: React.PointerEvent<HTMLImageElement>) => {
+    event.stopPropagation();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    previewDragStartRef.current = null;
+    setIsPreviewDragging(false);
+  }, []);
+
+  const onLightboxClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
+    if (previewDraggedRef.current) {
+      previewDraggedRef.current = false;
+      return;
+    }
+    closePreview();
+  }, [closePreview]);
 
   const lightbox = preview ? (
     <div
@@ -416,18 +479,21 @@ export function MarkdownClient({ content }: { content: string }) {
       role="dialog"
       aria-modal="true"
       aria-label="图片预览"
-      onClick={closePreview}
+      onClick={onLightboxClick}
       onWheel={onPreviewWheel}
     >
       <img
         ref={previewImgRef}
-        className="image-lightbox-img"
+        className={`image-lightbox-img${isPreviewDragging ? " is-dragging" : ""}`}
         src={preview.src}
         alt={preview.alt}
         draggable={false}
         onClick={(event) => event.stopPropagation()}
+        onPointerDown={onPreviewPointerDown}
+        onPointerMove={onPreviewPointerMove}
+        onPointerUp={endPreviewDrag}
+        onPointerCancel={endPreviewDrag}
       />
-      <div className="image-lightbox-hint">滚轮缩放 · 点击空白关闭 · Esc 退出</div>
     </div>
   ) : null;
 
