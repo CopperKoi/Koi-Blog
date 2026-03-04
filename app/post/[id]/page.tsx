@@ -52,11 +52,14 @@ export default function PostPage() {
 
     const startY = window.scrollY;
     const distance = clampedTarget - startY;
-    const duration = 220;
+    const duration = 300;
     const start = performance.now();
     const animate = (now: number) => {
       const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 4);
+      const eased =
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
       window.scrollTo(0, startY + distance * eased);
       if (progress < 1) {
         tocScrollFrameRef.current = window.requestAnimationFrame(animate);
