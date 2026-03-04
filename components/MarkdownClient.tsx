@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import { Marked, Renderer } from "marked";
@@ -255,6 +256,51 @@ export function extractMarkdownHeadings(content: string): MarkdownHeading[] {
 
 export function MarkdownClient({ content }: { content: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const previewImgRef = useRef<HTMLImageElement>(null);
+  const previewZoomFrameRef = useRef<number | null>(null);
+  const previewScaleRef = useRef(1);
+  const previewTargetScaleRef = useRef(1);
+  const [canPortal, setCanPortal] = useState(false);
+  const [preview, setPreview] = useState<{
+    src: string;
+    alt: string;
+  } | null>(null);
+
+  const applyPreviewScale = useCallback((scale: number) => {
+    const image = previewImgRef.current;
+    if (!image) return;
+    image.style.transform = `translateZ(0) scale(${scale})`;
+  }, []);
+
+  const stopPreviewZoomAnimation = useCallback(() => {
+    if (previewZoomFrameRef.current === null) return;
+    window.cancelAnimationFrame(previewZoomFrameRef.current);
+    previewZoomFrameRef.current = null;
+  }, []);
+
+  const startPreviewZoomAnimation = useCallback(() => {
+    if (previewZoomFrameRef.current !== null) return;
+    const tick = () => {
+      const current = previewScaleRef.current;
+      const target = previewTargetScaleRef.current;
+      const next = current + (target - current) * 0.24;
+      if (Math.abs(target - next) < 0.0015) {
+        previewScaleRef.current = target;
+        applyPreviewScale(target);
+        previewZoomFrameRef.current = null;
+        return;
+      }
+      previewScaleRef.current = next;
+      applyPreviewScale(next);
+      previewZoomFrameRef.current = window.requestAnimationFrame(tick);
+    };
+    previewZoomFrameRef.current = window.requestAnimationFrame(tick);
+  }, [applyPreviewScale]);
+
+  const closePreview = useCallback(() => {
+    stopPreviewZoomAnimation();
+    setPreview(null);
+  }, [stopPreviewZoomAnimation]);
   const html = useMemo(() => {
     const resolveHeadingId = createHeadingIdResolver();
     const renderer = createMarkdownRenderer(resolveHeadingId);
@@ -273,6 +319,10 @@ export function MarkdownClient({ content }: { content: string }) {
     DOMPurify.removeAllHooks();
     return clean;
   }, [content]);
+
+  useEffect(() => {
+    setCanPortal(true);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -294,16 +344,101 @@ export function MarkdownClient({ content }: { content: string }) {
           button.textContent = original || "复制";
         }, 1500);
       });
+      return;
     };
+
+    const onImageClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      const image = target.closest("img") as HTMLImageElement | null;
+      if (!image || !container.contains(image)) return;
+      event.preventDefault();
+      const src = image.currentSrc || image.src || "";
+      if (!src) return;
+      setPreview({
+        src,
+        alt: image.alt || ""
+      });
+    };
+
     container.addEventListener("click", onClick);
-    return () => container.removeEventListener("click", onClick);
+    container.addEventListener("click", onImageClick);
+    return () => {
+      container.removeEventListener("click", onClick);
+      container.removeEventListener("click", onImageClick);
+    };
   }, [html]);
 
-  return (
+  useEffect(() => {
+    if (!preview) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [preview]);
+
+  useEffect(() => {
+    if (!preview) return;
+    previewScaleRef.current = 1;
+    previewTargetScaleRef.current = 1;
+    applyPreviewScale(1);
+    return () => stopPreviewZoomAnimation();
+  }, [preview, applyPreviewScale, stopPreviewZoomAnimation]);
+
+  useEffect(() => {
+    if (!preview) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closePreview();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [preview, closePreview]);
+
+  const onPreviewWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (!preview) return;
+    const clampedDelta = Math.max(-120, Math.min(120, event.deltaY));
+    const factor = Math.exp(-clampedDelta * 0.0025);
+    const nextTarget = Math.min(
+      5,
+      Math.max(0.6, Number((previewTargetScaleRef.current * factor).toFixed(4)))
+    );
+    previewTargetScaleRef.current = nextTarget;
+    startPreviewZoomAnimation();
+  }, [preview, startPreviewZoomAnimation]);
+
+  const lightbox = preview ? (
     <div
-      ref={containerRef}
-      className="markdown"
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+      className="image-lightbox"
+      role="dialog"
+      aria-modal="true"
+      aria-label="图片预览"
+      onClick={closePreview}
+      onWheel={onPreviewWheel}
+    >
+      <img
+        ref={previewImgRef}
+        className="image-lightbox-img"
+        src={preview.src}
+        alt={preview.alt}
+        draggable={false}
+        onClick={(event) => event.stopPropagation()}
+      />
+      <div className="image-lightbox-hint">滚轮缩放 · 点击空白关闭 · Esc 退出</div>
+    </div>
+  ) : null;
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className="markdown"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+      {canPortal && lightbox ? createPortal(lightbox, document.body) : lightbox}
+    </>
   );
 }
