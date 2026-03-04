@@ -53,6 +53,10 @@
   --inline-code-bg: color-mix(in srgb, var(--brand-soft) 36%, #ffffff);
   --inline-code-border: color-mix(in srgb, var(--brand) 24%, #ffffff);
   --inline-code-text: #2f3133;
+  --task-checkbox-bg: #f5f7fa;
+  --task-checkbox-border: color-mix(in srgb, var(--brand) 42%, var(--border));
+  --task-checkbox-check: #ffffff;
+  --task-checkbox-checked-bg: color-mix(in srgb, var(--brand) 80%, #365a88);
   --travel-city-bg: #e8eff8;
   --travel-city-border: #8ea5c2;
   --travel-city-visited: #4f78b6;
@@ -89,6 +93,10 @@
     --inline-code-bg: color-mix(in srgb, var(--brand-soft) 42%, #0e1013);
     --inline-code-border: color-mix(in srgb, var(--brand) 26%, #0e1013);
     --inline-code-text: #eef0f2;
+    --task-checkbox-bg: #1d2630;
+    --task-checkbox-border: color-mix(in srgb, var(--brand) 52%, var(--border));
+    --task-checkbox-check: #0f141a;
+    --task-checkbox-checked-bg: #9ec2f2;
     --travel-city-bg: #273647;
     --travel-city-border: #4f6a88;
     --travel-city-visited: #87b1e8;
@@ -129,6 +137,10 @@
   --inline-code-bg: color-mix(in srgb, var(--brand-soft) 42%, #0e1013);
   --inline-code-border: color-mix(in srgb, var(--brand) 26%, #0e1013);
   --inline-code-text: #eef0f2;
+  --task-checkbox-bg: #1d2630;
+  --task-checkbox-border: color-mix(in srgb, var(--brand) 52%, var(--border));
+  --task-checkbox-check: #0f141a;
+  --task-checkbox-checked-bg: #9ec2f2;
   --travel-city-bg: #273647;
   --travel-city-border: #4f6a88;
   --travel-city-visited: #87b1e8;
@@ -933,6 +945,64 @@ select:focus {
 
 .markdown > * {
   max-width: 100%;
+}
+
+.markdown .task-list {
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.markdown .task-list-item {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.markdown .task-list-item::marker {
+  content: "";
+}
+
+.markdown .task-list-item > input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--task-checkbox-border);
+  background: var(--task-checkbox-bg);
+  box-shadow: none;
+  cursor: default;
+  position: relative;
+}
+
+.markdown .task-list-item > input[type="checkbox"]:checked {
+  background: var(--task-checkbox-checked-bg);
+  border-color: var(--task-checkbox-checked-bg);
+}
+
+.markdown .task-list-item > input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--task-checkbox-check);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.markdown .task-list-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .markdown img,

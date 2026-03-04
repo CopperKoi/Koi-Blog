@@ -119,6 +119,7 @@ function createHeadingIdResolver() {
 
 function createMarkdownRenderer(resolveHeadingId: (value: string) => string) {
   const renderer = new Renderer();
+  const fallbackRenderer = new Renderer();
 
   renderer.code = ({ text, lang }) => {
     const safeLanguage =
@@ -157,6 +158,19 @@ function createMarkdownRenderer(resolveHeadingId: (value: string) => string) {
     const id = resolveHeadingId(text);
     const inlineHtml = markdown.parseInline(text, { renderer, async: false }) as string;
     return `<h${depth} id="${id}">${inlineHtml}</h${depth}>`;
+  };
+
+  renderer.list = (token) => {
+    const html = fallbackRenderer.list.call(renderer, token);
+    if (!token.items?.some((item) => item.task)) return html;
+    return html.replace(/^<(ul|ol)>/, "<$1 class=\"task-list\">");
+  };
+
+  renderer.listitem = (item) => {
+    if (!item.task) return fallbackRenderer.listitem.call(renderer, item);
+    const checkedAttr = item.checked ? " checked=\"\"" : "";
+    const inlineHtml = markdown.parseInline(item.text || "", { renderer, async: false }) as string;
+    return `<li class="task-list-item"><input type="checkbox" disabled=""${checkedAttr}><span class="task-list-text">${inlineHtml}</span></li>`;
   };
 
   return renderer;
