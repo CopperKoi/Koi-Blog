@@ -53,6 +53,9 @@
   --inline-code-bg: color-mix(in srgb, var(--brand-soft) 36%, #ffffff);
   --inline-code-border: color-mix(in srgb, var(--brand) 24%, #ffffff);
   --inline-code-text: #2f3133;
+  --search-highlight-bg: color-mix(in srgb, #f4c977 68%, #ffffff);
+  --search-highlight-border: color-mix(in srgb, #d9aa46 52%, var(--border));
+  --search-highlight-text: #3a2b08;
   --task-checkbox-bg: #f5f7fa;
   --task-checkbox-border: color-mix(in srgb, var(--brand) 42%, var(--border));
   --task-checkbox-check: #ffffff;
@@ -93,6 +96,9 @@
     --inline-code-bg: color-mix(in srgb, var(--brand-soft) 42%, #0e1013);
     --inline-code-border: color-mix(in srgb, var(--brand) 26%, #0e1013);
     --inline-code-text: #eef0f2;
+    --search-highlight-bg: color-mix(in srgb, #d1a355 38%, #1a1510);
+    --search-highlight-border: color-mix(in srgb, #d9aa46 40%, #5a4625);
+    --search-highlight-text: #f8e4ba;
     --task-checkbox-bg: #1d2630;
     --task-checkbox-border: color-mix(in srgb, var(--brand) 52%, var(--border));
     --task-checkbox-check: #0f141a;
@@ -137,6 +143,9 @@
   --inline-code-bg: color-mix(in srgb, var(--brand-soft) 42%, #0e1013);
   --inline-code-border: color-mix(in srgb, var(--brand) 26%, #0e1013);
   --inline-code-text: #eef0f2;
+  --search-highlight-bg: color-mix(in srgb, #d1a355 38%, #1a1510);
+  --search-highlight-border: color-mix(in srgb, #d9aa46 40%, #5a4625);
+  --search-highlight-text: #f8e4ba;
   --task-checkbox-bg: #1d2630;
   --task-checkbox-border: color-mix(in srgb, var(--brand) 52%, var(--border));
   --task-checkbox-check: #0f141a;
@@ -617,6 +626,38 @@ main {
 .post-list {
   display: grid;
   gap: var(--space-4);
+}
+
+.search-result-title {
+  margin: 0;
+}
+
+.search-result-title a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.search-result-title a:hover {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.search-result-snippet {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  line-height: 1.8;
+}
+
+.search-highlight {
+  display: inline;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid var(--search-highlight-border);
+  background: var(--search-highlight-bg);
+  color: var(--search-highlight-text);
+  font-style: normal;
+  font-weight: 600;
 }
 
 .form-card {
