@@ -98,10 +98,10 @@ export function SiteHeader() {
             <Link href="/travel">Travel</Link>
             {isAdmin && (
               <>
-                <Link href="/studio-i10v32wn1220">Manage</Link>
-                <Link href="/editor-i10v32wn1220?new=1">New</Link>
-                <Link href="/editor-i10v32wn1220?about=1">Update About</Link>
-                <Link href="/ssl-i10v32wn1220">Update Certificate</Link>
+                <Link href="/studio">Manage</Link>
+                <Link href="/editor?new=1">New</Link>
+                <Link href="/editor?about=1">Update About</Link>
+                <Link href="/ssl">Update Certificate</Link>
                 <button
                   className="link-button"
                   type="button"

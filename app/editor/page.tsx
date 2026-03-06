@@ -272,7 +272,7 @@ function EditorContent() {
   return (
     <AdminGuard>
       <SiteHeader />
-      <main className="container">
+      <main className="container editor-page">
         <section className="row space-between">
           <div>
             <h1 id="editorTitle" style={{ marginBottom: "var(--space-2)" }}>

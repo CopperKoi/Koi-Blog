@@ -252,6 +252,10 @@ a:hover {
   padding-right: var(--space-5);
 }
 
+.container.editor-page {
+  width: min(1320px, 100%);
+}
+
 .site-header {
   position: fixed;
   top: 0;
