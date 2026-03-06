@@ -146,7 +146,7 @@ export default function SearchPage() {
       <main className="container">
         <section className="form-card">
           <h1 style={{ marginTop: 0 }}>检索文章</h1>
-          <p className="meta">支持标题与正文内容检索，结果会展示命中正文片段。</p>
+          <p className="meta">支持标题与正文内容检索。</p>
           <label>
             <input
               type="search"
