@@ -38,6 +38,12 @@ export default function PostPage() {
 
   const tocHeadings = useMemo(() => extractMarkdownHeadings(post?.content || ""), [post?.content]);
 
+  const getTargetY = (target: HTMLElement) => {
+    const rootStyles = window.getComputedStyle(document.documentElement);
+    const headerHeight = Number.parseFloat(rootStyles.getPropertyValue("--site-header-height")) || 0;
+    return Math.max(window.scrollY + target.getBoundingClientRect().top - headerHeight - 16, 0);
+  };
+
   const scrollToY = (targetY: number) => {
     if (tocScrollFrameRef.current !== null) {
       window.cancelAnimationFrame(tocScrollFrameRef.current);
@@ -70,6 +76,24 @@ export default function PostPage() {
     tocScrollFrameRef.current = window.requestAnimationFrame(animate);
   };
 
+  const getHashHeadingId = () => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return "";
+    try {
+      return decodeURIComponent(hash);
+    } catch {
+      return hash;
+    }
+  };
+
+  const scrollToHeading = (headingId: string) => {
+    if (!headingId) return false;
+    const target = document.getElementById(headingId);
+    if (!target) return false;
+    scrollToY(getTargetY(target));
+    return true;
+  };
+
   const onTocTitleClick = () => {
     scrollToY(0);
     window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
@@ -77,18 +101,25 @@ export default function PostPage() {
 
   const onTocClick = (event: MouseEvent<HTMLAnchorElement>, headingId: string) => {
     event.preventDefault();
-    const target = document.getElementById(headingId);
-    if (!target) return;
-
-    const rootStyles = window.getComputedStyle(document.documentElement);
-    const headerHeight = Number.parseFloat(rootStyles.getPropertyValue("--site-header-height")) || 0;
-    const targetY = Math.max(
-      window.scrollY + target.getBoundingClientRect().top - headerHeight - 16,
-      0
-    );
-    scrollToY(targetY);
+    if (!scrollToHeading(headingId)) return;
     window.history.replaceState(null, "", `#${headingId}`);
   };
+
+  useEffect(() => {
+    if (status || !post) return;
+
+    // The heading anchors do not exist until markdown finishes rendering on the client.
+    const syncHashScroll = () => {
+      scrollToHeading(getHashHeadingId());
+    };
+
+    const frame = window.requestAnimationFrame(syncHashScroll);
+    window.addEventListener("hashchange", syncHashScroll);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("hashchange", syncHashScroll);
+    };
+  }, [status, post]);
 
   return (
     <>
