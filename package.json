@@ -12,7 +12,7 @@
   "dependencies": {
     "bcryptjs": "latest",
     "cookie": "latest",
-    "dompurify": "latest",
+    "dompurify": "^3.3.2",
     "echarts": "^6.0.0",
     "highlight.js": "latest",
     "jsdom": "latest",
